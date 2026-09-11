@@ -39,6 +39,8 @@ public:
 
     bool currentRenderReady() const;
 
+    void setFitzModifier(int modifier);
+
 private:
     ByteArray uncompress();
     bool load();
@@ -57,6 +59,7 @@ private:
     QImage firstImage;
     QImage prevImage;
     QImage currentImage;
+    TlottieFitzModifier fitzModifier = TLOTTIE_FITZ_NONE;
     TLottieInstance *instance = nullptr;
     QFuture<bool> currentRender; // FIXME: should be QFuture<QImage> ideally
 };

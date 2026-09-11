@@ -11,6 +11,7 @@
 class LottieItem : public QQuickItem {
     Q_OBJECT
     Q_PROPERTY(bool autoLoad MEMBER autoLoad WRITE setAutoLoad NOTIFY autoLoadChanged)
+    Q_PROPERTY(int fitzModifier MEMBER fitzModifier WRITE setFitzModifier NOTIFY fitzModifierChanged)
     Q_PROPERTY(QUrl source MEMBER source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(bool loaded READ loaded NOTIFY loadedChanged)
     Q_PROPERTY(bool error MEMBER error NOTIFY errorChanged)
@@ -43,6 +44,8 @@ public:
 
     void setLoop(bool value);
 
+    void setFitzModifier(int modifier);
+
 signals:
     void sourceChanged();
     void autoLoadChanged();
@@ -56,6 +59,7 @@ signals:
     void frameCountChanged();
     void loopChanged();
     void loopFinished();
+    void fitzModifierChanged();
 
 protected:
     virtual QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData*) override;
@@ -73,16 +77,17 @@ private slots:
 
 private:
     QUrl source;
-    QIODevice *device;
-    TgsIOHandler *handler; // TODO/TBD: should we remove TgsIOHandler?
+    QIODevice *device = nullptr;
+    TgsIOHandler *handler = nullptr; // TODO/TBD: should we remove TgsIOHandler?
     QNetworkAccessManager *networkManager;
     QImage currentImage;
     QTimer nextImageTimer;
     QMap<QImageIOHandler::ImageOption, QVariant> pendingOptions;
-    int pendingFrameJump;
-    bool jumpedToFrame;
-    bool autoLoad;
-    bool error;
-    bool paused;
-    bool loop;
+    int fitzModifier = 0;
+    int pendingFrameJump = -1;
+    bool jumpedToFrame = false;
+    bool autoLoad = true;
+    bool error = false;
+    bool paused = false;
+    bool loop = false;
 };

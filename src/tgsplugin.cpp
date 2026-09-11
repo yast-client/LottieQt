@@ -12,6 +12,7 @@
 #define DEBUG_MODULE TgsIOHandler
 #include "debuglog.h"
 #define LOG_(x) LOG(qPrintable(fileName) << x)
+#define WARN_(x) WARN(qPrintable(fileName) << x)
 
 const QByteArray TgsIOHandler::NAME("tgs");
 const QByteArray TgsIOHandler::GZ_MAGIC("\x1f\x8b");
@@ -82,7 +83,7 @@ bool TgsIOHandler::load() {
         ByteArray json = uncompress();
         if (json.size() > 0) {
             instance = tlottie_new_with_options(reinterpret_cast<const uint8_t*>(json.data()), json.size(),
-                                                TLOTTIE_FITZ_NONE,
+                                                fitzModifier,
                                                 nullptr, 0, nullptr, 0,
                                                 TLOTTIE_CHANNEL_BGRA);
             if (instance) {
@@ -203,6 +204,22 @@ void TgsIOHandler::setOption(ImageOption option, const QVariant &value) {
         break;
     default:
         break;
+    }
+}
+
+void TgsIOHandler::setFitzModifier(int modifier) {
+    if (instance) {
+        WARN_("Fitz modifier set after initialization, ignoring");
+        return;
+    }
+    switch (modifier) {
+    case 1:
+    case 2: fitzModifier = TLOTTIE_FITZ_TYPE_12; break;
+    case 3: fitzModifier = TLOTTIE_FITZ_TYPE_3; break;
+    case 4: fitzModifier = TLOTTIE_FITZ_TYPE_4; break;
+    case 5: fitzModifier = TLOTTIE_FITZ_TYPE_5; break;
+    case 6: fitzModifier = TLOTTIE_FITZ_TYPE_6; break;
+    default: fitzModifier = TLOTTIE_FITZ_NONE;
     }
 }
 

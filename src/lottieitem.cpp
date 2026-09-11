@@ -16,15 +16,7 @@
 
 LottieItem::LottieItem() :
     QQuickItem(),
-    device(nullptr),
-    handler(nullptr),
-    networkManager(new QNetworkAccessManager(this)),
-    pendingFrameJump(-1),
-    jumpedToFrame(false),
-    autoLoad(true),
-    error(false),
-    paused(false),
-    loop(false)
+    networkManager(new QNetworkAccessManager(this))
 {
     setFlag(ItemHasContents);
 
@@ -113,6 +105,14 @@ void LottieItem::setSource(QUrl source) {
     }
 }
 
+void LottieItem::setFitzModifier(int modifier) {
+    if (fitzModifier != modifier) {
+        LOG("Setting fitz modifier" << modifier);
+        fitzModifier = modifier;
+        if (handler) handler->setFitzModifier(modifier);
+    }
+}
+
 void LottieItem::handleNetworkRequestFinished() {
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     if (reply->error() != QNetworkReply::NoError) {
@@ -127,6 +127,7 @@ void LottieItem::handleNetworkRequestFinished() {
 void LottieItem::setupHandler() {
     delete handler;
     handler = new TgsIOHandler(this->device, TgsIOHandler::NAME);
+    handler->setFitzModifier(fitzModifier);
     for (QImageIOHandler::ImageOption option : pendingOptions.keys())
         handler->setOption(option, pendingOptions.value(option));
     pendingOptions.clear();

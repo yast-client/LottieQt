@@ -109,12 +109,10 @@ void TgsIOHandler::finishRendering() {
 
 bool TgsIOHandler::doRenderFrame(int frame, int width, int height) {
     const size_t pixelCount = static_cast<size_t>(width) * static_cast<size_t>(height);
-    TlottieStatus status = static_cast<TlottieStatus>(tlottie_render_with_options(
+    TlottieStatus status = static_cast<TlottieStatus>(tlottie_render(
         instance, frame, width, height,
         reinterpret_cast<uint32_t*>(currentImage.bits()), pixelCount,
-        1, // antialiasing
-        0.125f, // curve tolerance (same as the default in tlottie)
-        0 // don't clear
+        1 // antialiasing
     ));
 
     if (status != TLOTTIE_OK) {

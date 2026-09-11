@@ -7,11 +7,12 @@
 #include <QStringList>
 #include <QImageIOPlugin>
 
-#include "rlottie.h"
+#include "tlottie.h"
 
 #include <QSize>
 #include <QImage>
 #include <QImageIOHandler>
+#include <QtConcurrent/QtConcurrent>
 
 class TgsIOHandler : public QImageIOHandler {
 public:
@@ -22,28 +23,31 @@ public:
     TgsIOHandler(QIODevice* device, const QByteArray& format);
     ~TgsIOHandler();
 
+    // QImageIOHandler
+    bool canRead() const override;
+    bool read(QImage* image) override;
+    QVariant option(ImageOption option) const override;
+    void setOption(ImageOption option, const QVariant &value) override;
+    bool supportsOption(ImageOption option) const override;
+    bool jumpToNextImage() override;
+    bool jumpToImage(int imageNumber) override;
+    int loopCount() const override;
+    int imageCount() const override;
+    int nextImageDelay() const override;
+    int currentImageNumber() const override;
+    QRect currentImageRect() const override;
+
+    bool currentRenderReady() const;
+
+private:
     ByteArray uncompress();
     bool load();
     void render(int frameIndex);
     void finishRendering();
 
-    // QImageIOHandler
-    bool canRead() const Q_DECL_OVERRIDE;
-    bool read(QImage* image) Q_DECL_OVERRIDE;
-    QVariant option(ImageOption option) const Q_DECL_OVERRIDE;
-    void setOption(ImageOption option, const QVariant &value) Q_DECL_OVERRIDE;
-    bool supportsOption(ImageOption option) const Q_DECL_OVERRIDE;
-    bool jumpToNextImage() Q_DECL_OVERRIDE;
-    bool jumpToImage(int imageNumber) Q_DECL_OVERRIDE;
-    int loopCount() const Q_DECL_OVERRIDE;
-    int imageCount() const Q_DECL_OVERRIDE;
-    int nextImageDelay() const Q_DECL_OVERRIDE;
-    int currentImageNumber() const Q_DECL_OVERRIDE;
-    QRect currentImageRect() const Q_DECL_OVERRIDE;
+    bool doRenderFrame(int frame, int width, int height);
 
-    bool currentRenderReady() const;
-
-public:
+private:
     QString fileName;
     QSize size;
     QSize scaledSize;
@@ -53,14 +57,14 @@ public:
     QImage firstImage;
     QImage prevImage;
     QImage currentImage;
-    std::future<rlottie::Surface> currentRender;
-    std::unique_ptr<rlottie::Animation> animation;
+    TLottieInstance *instance = nullptr;
+    QFuture<bool> currentRender; // FIXME: should be QFuture<QImage> ideally
 };
 
 class TgsIOPlugin : public QImageIOPlugin {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QImageIOHandlerFactoryInterface" FILE "tgsplugin.json")
 public:
-    Capabilities capabilities(QIODevice* device, const QByteArray& format) const Q_DECL_OVERRIDE;
-    QImageIOHandler* create(QIODevice* device, const QByteArray& format) const Q_DECL_OVERRIDE;
+    Capabilities capabilities(QIODevice* device, const QByteArray& format) const override;
+    QImageIOHandler* create(QIODevice* device, const QByteArray& format) const override;
 };

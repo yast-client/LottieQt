@@ -25,9 +25,8 @@ TgsIOHandler::TgsIOHandler(QIODevice* device, const QByteArray& format) {
 }
 
 TgsIOHandler::~TgsIOHandler() {
-    if (currentRender.valid())
-        currentRender.get();
-
+    if (currentRender.isRunning())
+        currentRender.waitForFinished();
     LOG_("Done");
 }
 
@@ -77,36 +76,49 @@ TgsIOHandler::ByteArray TgsIOHandler::uncompress() {
 }
 
 bool TgsIOHandler::load() {
-    if (!animation && device()) {
-        ByteArray json(uncompress());
+    if (!instance && device()) {
+        ByteArray json = uncompress();
         if (json.size() > 0) {
-            animation = rlottie::Animation::loadFromData(json, std::string(), std::string(), false);
-            if (animation) {
-                size_t width, height;
-                animation->size(width, height);
-                frameRate = animation->frameRate();
-                frameCount = (int) animation->totalFrame();
-                size = QSize(width, height);
+            instance = tlottie_new(reinterpret_cast<const uint8_t*>(json.data()), json.size());
+            if (instance) {
+                size = QSize(tlottie_width(instance), tlottie_height(instance));
+                frameRate = tlottie_frame_rate(instance);
+                frameCount = tlottie_frame_count(instance);
                 LOG_(size << frameCount << "frames," << frameRate << "fps");
                 render(0); // Pre-render first frame
             }
         }
     }
-    return animation != Q_NULLPTR;
+    return instance;
 }
 
 void TgsIOHandler::finishRendering() {
-    if (currentRender.valid()) {
-        currentRender.get();
+    if (currentRender.isRunning()) {
+        currentRender.waitForFinished();
         prevImage = currentImage;
         if (!currentFrame && !firstImage.isNull()) {
             LOG_("Rendered first frame");
             firstImage = currentImage;
         }
-    } else {
-        // Must be the first frame
+    } else // Must be the first frame
         prevImage = currentImage;
+}
+
+bool TgsIOHandler::doRenderFrame(int frame, int width, int height) {
+    const size_t pixelCount = static_cast<size_t>(width) * static_cast<size_t>(height);
+    TlottieStatus status = static_cast<TlottieStatus>(tlottie_render_with_options(
+        instance, frame, width, height,
+        reinterpret_cast<uint32_t*>(currentImage.bits()), pixelCount,
+        1, // antialiasing
+        0.125f, // curve tolerance (same as the default in tlottie)
+        0 // don't clear
+    ));
+
+    if (status != TLOTTIE_OK) {
+        LOG_("Couldn't render frame" << frame << "tlottie error" << status);
+        return false;
     }
+    return true;
 }
 
 void TgsIOHandler::render(int frameIndex) {
@@ -123,24 +135,20 @@ void TgsIOHandler::render(int frameIndex) {
             width = size.width();
             height = size.height();
         }
-        currentImage = QImage(width, height, QImage::Format_ARGB32_Premultiplied);
-        currentRender = animation->render(currentFrame,
-            rlottie::Surface((uint32_t*)currentImage.bits(),
-                width, height, currentImage.bytesPerLine()));
+
+        currentImage = QImage(width, height, QImage::Format_RGBA8888_Premultiplied);
+        currentRender = QtConcurrent::run(this, &TgsIOHandler::doRenderFrame, currentFrame, width, height);
     }
 }
 
 bool TgsIOHandler::read(QImage* out) {
-    if (load() && frameCount > 0) {
+    if (load() && frameCount) {
         // We must have the first frame, will wait if necessary
-        if (currentFrame && currentRender.valid()) {
-            std::future_status status = currentRender.wait_for(std::chrono::milliseconds(0));
-            if (status != std::future_status::ready) {
-                LOG_("Skipping frame" << currentFrame);
-                currentFrame = (currentFrame + 1) % frameCount;
-                *out = prevImage;
-                return true;
-            }
+        if (currentFrame && currentRender.isStarted() && (!currentRender.isFinished() || !currentRender.result())) {
+            LOG_("Skipping frame" << currentFrame);
+            currentFrame = (currentFrame + 1) % frameCount;
+            *out = prevImage;
+            return true;
         }
         finishRendering();
         *out = currentImage;
@@ -162,7 +170,7 @@ QVariant TgsIOHandler::option(ImageOption option) const {
     case Animation:
         return true;
     case ImageFormat:
-        return QImage::Format_ARGB32_Premultiplied;
+        return QImage::Format_RGBA8888_Premultiplied;
     default:
         break;
     }
@@ -236,11 +244,7 @@ int TgsIOHandler::nextImageDelay() const {
 }
 
 bool TgsIOHandler::currentRenderReady() const {
-    if (frameCount && currentFrame && currentRender.valid()) {
-        std::future_status status = currentRender.wait_for(std::chrono::milliseconds(0));
-        return status == std::future_status::ready;
-    }
-    return false;
+    return frameCount && currentFrame && currentRender.isStarted() && (!currentRender.isFinished() || !currentRender.result());
 }
 
 QImageIOPlugin::Capabilities TgsIOPlugin::capabilities(QIODevice*, const QByteArray& format) const {

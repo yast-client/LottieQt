@@ -5,10 +5,9 @@ LottieQt allows you to integrate Lottie, as well as TGS (Telegram Stickers, GZip
 ## Credits
 
 - [Fernschreiber](https://github.com/Wunderfitz/harbour-fernschreiber/), the project where this was originally used
-- [rlottie](https://github.com/Samsung/rlottie)
+- [tlottie](https://github.com/dkaraush/tlottie)
 
 ## TODO
 
-- Use faster and more crash-free tlottie instead of rlottie
 - Support loading via HTTP(S) (and, if needed, using other network protocols)
 - Support disabling some features (such as TGS support)

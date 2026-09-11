@@ -27,6 +27,8 @@ TgsIOHandler::TgsIOHandler(QIODevice* device, const QByteArray& format) {
 TgsIOHandler::~TgsIOHandler() {
     if (currentRender.isRunning())
         currentRender.waitForFinished();
+    if (instance)
+        tlottie_drop(instance);
     LOG_("Done");
 }
 

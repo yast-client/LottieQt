@@ -7,7 +7,7 @@
 #include <QLoggingCategory>
 
 #ifndef DEBUG_ROOT_MODULE
-#define DEBUG_ROOT_MODULE "yaqtlib"
+#define DEBUG_ROOT_MODULE "lottieqt"
 #endif
 
 #ifndef DEBUG_MODULE

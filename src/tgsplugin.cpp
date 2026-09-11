@@ -79,7 +79,10 @@ bool TgsIOHandler::load() {
     if (!instance && device()) {
         ByteArray json = uncompress();
         if (json.size() > 0) {
-            instance = tlottie_new(reinterpret_cast<const uint8_t*>(json.data()), json.size());
+            instance = tlottie_new_with_options(reinterpret_cast<const uint8_t*>(json.data()), json.size(),
+                                                TLOTTIE_FITZ_NONE,
+                                                nullptr, 0, nullptr, 0,
+                                                TLOTTIE_CHANNEL_BGRA);
             if (instance) {
                 size = QSize(tlottie_width(instance), tlottie_height(instance));
                 frameRate = tlottie_frame_rate(instance);
@@ -136,7 +139,7 @@ void TgsIOHandler::render(int frameIndex) {
             height = size.height();
         }
 
-        currentImage = QImage(width, height, QImage::Format_RGBA8888_Premultiplied);
+        currentImage = QImage(width, height, QImage::Format_ARGB32_Premultiplied);
         currentRender = QtConcurrent::run(this, &TgsIOHandler::doRenderFrame, currentFrame, width, height);
     }
 }
@@ -170,7 +173,7 @@ QVariant TgsIOHandler::option(ImageOption option) const {
     case Animation:
         return true;
     case ImageFormat:
-        return QImage::Format_RGBA8888_Premultiplied;
+        return QImage::Format_ARGB32_Premultiplied;
     default:
         break;
     }

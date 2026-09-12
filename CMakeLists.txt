@@ -35,6 +35,8 @@ add_dependencies(tlottie tlottie_build)
 
 add_library(LottieQt STATIC)
 
+find_package(Threads)
+
 target_include_directories(LottieQt PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${ZLIB_INCLUDE_DIRS}
@@ -44,6 +46,7 @@ target_link_libraries(LottieQt
     Qt5::Quick
     ${ZLIB_LIBRARIES}
     tlottie
+    ${CMAKE_THREAD_LIBS_INIT} # why is this needed?
 )
 
 target_compile_definitions(LottieQt PUBLIC QT_STATICPLUGIN)

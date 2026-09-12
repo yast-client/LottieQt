@@ -11,7 +11,7 @@ pkg_search_module(ZLIB zlib REQUIRED)
 
 set(TLOTTIE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tlottie)
 set(TLOTTIE_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/tlottie_target)
-set(TLOTTIE_LIB ${TLOTTIE_BUILD_DIR}/${TLOTTIE_BUILD_SUBDIR}/release/libtlottie.a)
+set(TLOTTIE_LIB ${TLOTTIE_BUILD_DIR}/${TLOTTIE_BUILD_SUBDIR}/release-nostd/libtlottie.a)
 
 add_custom_command(
     OUTPUT ${TLOTTIE_LIB}
@@ -19,7 +19,7 @@ add_custom_command(
         "${TLOTTIE_RUST_ENV}"
         "RUSTFLAGS=-C relocation-model=pic ${TLOTTIE_RUSTFLAGS}"
         "CARGO_TARGET_DIR=${TLOTTIE_BUILD_DIR}"
-        cargo rustc --release --features c-api --lib --crate-type staticlib
+        cargo rustc --profile release-nostd --features c-api --lib --crate-type staticlib
     WORKING_DIRECTORY ${TLOTTIE_DIR}
 )
 

@@ -264,7 +264,7 @@ int TgsIOHandler::nextImageDelay() const {
 }
 
 bool TgsIOHandler::currentRenderReady() const {
-    return frameCount && currentFrame && currentRender.isStarted() && (!currentRender.isFinished() || !currentRender.result());
+    return frameCount && currentFrame && currentRender.isStarted() && currentRender.isFinished() && currentRender.result();
 }
 
 QImageIOPlugin::Capabilities TgsIOPlugin::capabilities(QIODevice*, const QByteArray& format) const {

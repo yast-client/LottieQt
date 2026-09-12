@@ -184,8 +184,7 @@ int LottieItem::currentFrame() const {
 }
 
 void LottieItem::setCurrentFrame(int frame) {
-    if (frame < 0)
-        return;
+    frame = qMax(frame, 0);
 
     if (handler) {
         if (handler->jumpToImage(frame)) {

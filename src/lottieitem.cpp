@@ -200,8 +200,12 @@ void LottieItem::setCurrentFrame(int frame) {
     }
 }
 
-void LottieItem::replayIfNeeded() {
-    if (isLoopFinished()) setCurrentFrame(0);
+bool LottieItem::replayIfNeeded() {
+    if (isLoopFinished()) {
+        setCurrentFrame(0);
+        return true;
+    }
+    return false;
 }
 
 int LottieItem::frameCount() const {

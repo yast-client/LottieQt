@@ -35,7 +35,7 @@ public:
 
     int currentFrame() const;
     void setCurrentFrame(int frame);
-    Q_INVOKABLE void replayIfNeeded();
+    Q_INVOKABLE bool replayIfNeeded();
 
     QSize sourceSize() const;
     QSize scaledSize() const;

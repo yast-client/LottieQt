@@ -243,20 +243,20 @@ bool TgsIOHandler::jumpToImage(int imageNumber) {
     return false;
 }
 
-int TgsIOHandler::loopCount() const {
+inline int TgsIOHandler::loopCount() const {
     return -1;
 }
 
-int TgsIOHandler::imageCount() const {
+inline int TgsIOHandler::imageCount() const {
     return frameCount;
 }
 
-int TgsIOHandler::currentImageNumber() const {
+inline int TgsIOHandler::currentImageNumber() const {
     return currentFrame;
 }
 
-QRect TgsIOHandler::currentImageRect() const {
-    return QRect(QPoint(), size);
+inline QRect TgsIOHandler::currentImageRect() const {
+    return {QPoint(), size};
 }
 
 int TgsIOHandler::nextImageDelay() const {
